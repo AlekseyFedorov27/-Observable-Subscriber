@@ -2,4 +2,4 @@
 
 ## фаил скрипта script решение с Object.defineProperty
 
-## фаил скрипта script решение с Proxy 
+## фаил скрипта script2 решение с Proxy 
