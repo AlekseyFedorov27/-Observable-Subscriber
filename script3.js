@@ -1,6 +1,4 @@
-// Теперь в нашем классе появится возможность передавать множество подписчиков.
-// Вызов метода .destroy() удаляет всех подписчиков
-// Вызов метода .unSubscribe(handler1) удаляет определенныю функцию
+//РЕШЕНИЕ С PROXY
 
 class StateMultipleObservable {
   constructor(obj) {
@@ -24,7 +22,7 @@ class StateMultipleObservable {
   }
 }
 
-const state = new StateMultipleObservable({ count: 0, foo: 0, ctx: 0 });
+let state = new StateMultipleObservable({ count: 0, foo: 0, ctx: 0 });
 
 const handler1 = function (data) {
   console.log("функция 1:", data); // { count: some value }
@@ -47,17 +45,15 @@ state.unSubscribe(handler2, 1);
 
 let keyObj = Object.keys(state.obj);
 
-keyObj.forEach(function (item) {
-  let internalValue = state[item];
-  Object.defineProperty(state, item, {
-    get: function () {
-      return internalValue;
-    },
-    set: function (aValue) {
-      state.getCount(aValue);
-      internalValue = aValue;
-    },
-  });
+state = new Proxy(state, {
+  get(obj, key) {
+    return obj[key];
+  },
+  set(obj, key, newVal) {
+    obj.getCount(newVal);
+    obj[key] = 2222;
+    return true;
+  },
 });
 
 state.count = 2;

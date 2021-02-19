@@ -7,40 +7,47 @@
 //  вызываться получая обновленный объект state.
 
 class StateObservable {
-  constructor(data) {
-    this.subscribers = [];
-    this.total = data;
+  constructor(obj) {
+    this.func = null;
+    this.obj = obj;
   }
   subscribe(fn) {
-    if (fn && !this.subscribers.includes(fn)) {
-      this.subscribers.push(fn);
-    }
+    this.func = fn;
   }
-  getCount() {
-     this.subscribers.forEach((sub) => sub(this.total));
+  getCount( aValue) {
+    this.func(aValue);
   }
 }
 
-const state = new StateObservable({ count: 0 });
+const state = new StateObservable({ count: 0, foo: 0, ctx: 0 });
 
-Object.defineProperty(state, "count", {
-    get(){
-        return state.total
-    },
-  set(val) {
-    state.total = val;
-    state.getCount();
-  },
-});
 
 state.subscribe(function (data) {
-  console.log('функция 1', data); // { count: some value }
+  console.log("функция 1:", data); // { count: some value }
 });
 
-state.subscribe(function (data) {
-  console.log( `функция 2 ${data} * 2 =`, data * 2); // { count: some value }
+
+
+let keyObj = Object.keys(state.obj)
+
+keyObj.forEach(function(item) {
+  let internalValue = state[item]
+    Object.defineProperty(state, item, {
+        get: function() { 
+          return internalValue
+        },
+        set: function(aValue) {
+          state.getCount(aValue);
+          internalValue = aValue
+        }
+    });
+  
 });
+
 
 state.count = 2;
 
-state.count = 355;
+state.foo = 355;
+
+state.ctx = 68;
+
