@@ -8,46 +8,40 @@
 
 class StateObservable {
   constructor(obj) {
-    this.func = null;
-    this.obj = obj;
+    this.subscriber = null;
+    this.initeState = { ...obj };
+    this.init();
+  }
+  init() {
+    const self = this;
+    Object.entries(this.initeState).forEach(([key, value]) => {
+      Object.defineProperty(self, key, {
+        get: function () {
+          return value;
+        },
+        set: function (val) {
+          self.emitChange(val);
+          value = val;
+        },
+      });
+    });
   }
   subscribe(fn) {
-    this.func = fn;
+    this.subscriber = fn;
   }
-  getCount( aValue) {
-    this.func(aValue);
+  emitChange(value) {
+    this.subscriber(value);
   }
 }
 
 const state = new StateObservable({ count: 0, foo: 0, ctx: 0 });
 
-
 state.subscribe(function (data) {
-  console.log("функция 1:", data); // { count: some value }
+  console.log("функция 1:", data);
 });
-
-
-
-let keyObj = Object.keys(state.obj)
-
-keyObj.forEach(function(item) {
-  let internalValue = state[item]
-    Object.defineProperty(state, item, {
-        get: function() { 
-          return internalValue
-        },
-        set: function(aValue) {
-          state.getCount(aValue);
-          internalValue = aValue
-        }
-    });
-  
-});
-
-
+//Реактивные свойства
 state.count = 2;
 
 state.foo = 355;
 
 state.ctx = 68;
-

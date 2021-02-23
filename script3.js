@@ -2,23 +2,51 @@
 
 class StateMultipleObservable {
   constructor(obj) {
-    this.func = [];
-    this.obj = obj;
+    this.subscribers = [];
+    this.initeState = { ...obj };
+    return this.init();
   }
-  subscribe() {
-    this.func = [...arguments];
+  init() {
+    Object.entries(this.initeState).forEach(([key, value]) => {
+      this[key] = value;
+    });
+    return new Proxy(this, {
+      get(obj, key) {
+        return obj[key];
+      },
+      set(obj, key, newVal) {
+        if (key !== "subscribers") {
+          obj.emitChange(newVal);
+        }
+        obj[key] = newVal;
+        return true;
+      },
+    });
   }
-  getCount(aValue) {
-    this.func.map((fn) => {
-      fn(aValue);
+  subscribe(fn) {
+    if (typeof fn !== "function") {
+      new Error(`${fn} is not a function`);
+    } else {
+      let arr = [...arguments];
+      arr.forEach((item) => {
+        this.subscribers.push(item);
+      });
+    }
+  }
+  emitChange(value) {
+    this.subscribers.forEach((fn) => {
+      fn(value);
     });
   }
   destroy() {
-    this.func = [];
+    this.subscribers = [];
   }
   unSubscribe(fn) {
-    let index = this.func.indexOf(fn, 0);
-    this.func.splice(index, 1);
+    if (typeof fn !== "function") {
+      new Error(`${fn} is not a function`);
+    } else {
+      this.subscribers = this.subscribers.filter((item) => item !== fn);
+    }
   }
 }
 
@@ -38,23 +66,7 @@ const handler3 = function (data) {
 
 state.subscribe(handler1, handler2, handler3);
 
-state.count = 2;
-
-state.unSubscribe(handler2, 1);
-//   state.destroy()
-
-let keyObj = Object.keys(state.obj);
-
-state = new Proxy(state, {
-  get(obj, key) {
-    return obj[key];
-  },
-  set(obj, key, newVal) {
-    obj.getCount(newVal);
-    obj[key] = 2222;
-    return true;
-  },
-});
+state.unSubscribe(handler2);
 
 state.count = 2;
 
